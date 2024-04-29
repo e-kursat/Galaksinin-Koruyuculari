@@ -1,4 +1,4 @@
-# GalaksininKoruyuculari
+# Galaksinin-Koruyuculari
 
 Proje Adı: Galaksinin Koruyucuları
 
