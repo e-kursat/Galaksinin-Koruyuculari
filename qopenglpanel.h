@@ -14,6 +14,8 @@
 #include <QImage>
 #include <QOpenGLTexture>
 
+#include <QFileInfo>
+
 class QOpenGLPanel : public QOpenGLWidget
 {
 public:

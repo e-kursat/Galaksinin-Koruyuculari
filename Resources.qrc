@@ -1,6 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>simple.frag</file>
         <file>simple.vert</file>
+        <file>simple.frag</file>
+        <file>img/8k_sun.jpg</file>
+        <file>img/earth2048.bmp</file>
+        <file>img/moon1024.bmp</file>
     </qresource>
 </RCC>

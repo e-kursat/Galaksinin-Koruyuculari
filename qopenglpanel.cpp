@@ -358,7 +358,9 @@ void QOpenGLPanel::initializeGL()
 */
 
     // güneş texture u ekleniyor
-    QString sunTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/8k_sun.jpg";
+    //QString sunTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/8k_sun.jpg";
+    QString sunTexFileName = ":/img/8k_sun.jpg";
+
     sunTexture = loadTexture(sunTexFileName);
 
     //qDebug() << "sun texture: " << Texture;
@@ -395,7 +397,8 @@ void QOpenGLPanel::initializeGL()
 
 
     // dünya texture u ekleniyor
-    QString earthTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/earth2048.bmp";
+    // QString earthTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/earth2048.bmp";
+    QString earthTexFileName = ":/img/earth2048.bmp";
     earthTexture = loadTexture(earthTexFileName);
 
     /*
@@ -433,7 +436,8 @@ void QOpenGLPanel::initializeGL()
     */
 
     // ay texture u ekleniyor
-    QString moonTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/moon1024.bmp";
+    // QString moonTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/moon1024.bmp";
+    QString moonTexFileName = ":/img/moon1024.bmp";
     moonTexture = loadTexture(moonTexFileName);
 
     /*
