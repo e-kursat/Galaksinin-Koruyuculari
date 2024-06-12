@@ -11,6 +11,9 @@
 #include <QMatrix4x4>
 #include <QtMath>
 
+#include <QImage>
+#include <QOpenGLTexture>
+
 class QOpenGLPanel : public QOpenGLWidget
 {
 public:
@@ -26,7 +29,9 @@ public:
     void resetScene();
     void mousePressEvent(QMouseEvent* event) override;
 
-    void createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENT, GLfloat x_offset, GLfloat y_offset, GLfloat z_offset);
+    GLuint createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENT, GLfloat x_offset, GLfloat y_offset, GLfloat z_offset);
+    unsigned char* getObjectTextureData();
+    GLuint loadTexture(QString fileName);
 
 private:
 
@@ -41,7 +46,7 @@ private:
 
     GLuint progID, vertID, fragID;
     GLuint arrays, triangleData;
-    GLuint position, color;
+    GLuint position, color, normal, texture;
 
     GLuint translateMatrixID, rotateMatrixID, scaleMatrixID;
     QMatrix4x4 translateMatrix, rotateMatrix, scaleMatrix;
@@ -62,27 +67,6 @@ private:
     QVector3D cameraUp;
     GLfloat verticalAngle, aspectRatio, nearPlane, farPlane;
 
-
-
-    // memeber vars
-    float radius;                           // circumscribed radius
-    int subdivision;
-    bool smooth;
-
-    /*
-    std::vector<float> vertices;
-    std::vector<float> normals;
-    std::vector<float> texCoords;
-    std::vector<unsigned int> indices;
-    std::vector<unsigned int> lineIndices;
-    std::map<std::pair<float, float>, unsigned int> sharedIndices;   // indices of shared vertices, key is tex coord (s,t)
-
-    // interleaved
-    std::vector<float> interleavedVertices;
-    int interleavedStride;                  // # of bytes to hop to the next vertex (should be 32 bytes)
-    */
-
-
     std::vector<float> vert;
     GLuint sphereVAO[2], vbo[2], ebo[2];
     GLuint indexCount;
@@ -93,11 +77,24 @@ private:
 
     std::vector<unsigned int> indices;
 
+    QMatrix4x4 sunScaleMatrix;
     QMatrix4x4 sunRotateMatrix;
     QMatrix4x4 earthOrbitMatrix, moonOrbitMatrix;
     QMatrix4x4 earthSelfRotateMatrix, moonSelfRotateMatrix;
+    float sunScaleMultp;
     float earthOrbitAngle, moonOrbitAngle;
     float earthSelfRotateAngle, moonSelfRotateAngle;
+
+    GLuint sunSize;
+    GLuint moonSize;
+
+
+
+    // QOpenGLTexture *texture;
+    GLuint textureID;
+
+    QImage Texture;
+    GLuint sunTexture, earthTexture, moonTexture;
 };
 
 #endif // QOPENGLPANEL_H

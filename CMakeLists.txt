@@ -26,6 +26,9 @@ qt_add_executable(OpenGLKamera
     Resources.qrc
     simple.vert
     simple.frag
+    earth2048.bmp
+    moon1024.bmp
+    8k_sun.jpg
 )
 
 target_link_libraries(OpenGLKamera PUBLIC

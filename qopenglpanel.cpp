@@ -20,7 +20,7 @@ void QOpenGLPanel::resetScene()
 
 
     cameraMatrix.setToIdentity();
-    camEyeX = 0.0f, camEyeY= 0.0f, camEyeZ = 5.0f;
+    camEyeX = 0.0f, camEyeY= 0.0f, camEyeZ = 10.0f;
     cameraEye = QVector3D(camEyeX, camEyeY, camEyeZ);
     camCenterX = 0.0f, camCenterY = 0.0f, camCenterZ = 0.0f;
     cameraCenter = QVector3D(camCenterX, camCenterY, camCenterZ);
@@ -108,10 +108,10 @@ const char* QOpenGLPanel::readShaderSource(QString filename)
     return source;
 }
 
-void QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat x_offset, GLfloat y_offset, GLfloat z_offset)
+GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat x_offset, GLfloat y_offset, GLfloat z_offset)
 {
     // sphereVAO = 0;
-    //    unsigned int indexCount;
+    // unsigned int indexCount;
 
 
     vert.clear();
@@ -245,8 +245,43 @@ void QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat x_
 
     qDebug() << "data: " << &vert[0];
     */
+
+    return indexCount;
 }
 
+GLuint QOpenGLPanel::loadTexture(QString fileName){
+
+    QOpenGLFunctions *f = getGLFunctions();
+    f->initializeOpenGLFunctions();
+    QOpenGLExtraFunctions *ef = getGLExtraFunctions();
+    ef->initializeOpenGLFunctions();
+
+    Texture = QImage(fileName);
+
+    if (Texture.isNull()) {
+        qDebug() << "Failed to load texture from" << fileName;
+        return -1;
+    }
+
+    GLuint textureData;
+
+    f->glGenTextures(1, &textureData);
+    f->glBindTexture(GL_TEXTURE_2D, textureData);
+
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    QImage im = Texture.convertToFormat(QImage::Format_RGB888);
+
+    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, im.bits());
+    f->glGenerateMipmap(GL_TEXTURE_2D);
+
+    qDebug() << "sun: " << Texture;
+
+    return textureData;
+}
 
 void QOpenGLPanel::initializeGL()
 {
@@ -283,129 +318,8 @@ void QOpenGLPanel::initializeGL()
     f->glGenBuffers(2, &vbo[0]);
     f->glGenBuffers(2, &ebo[0]);
 
+
     checkGLError(f, "Generating and Binding Vertex Arrays");
-
-/*
-    sphereVAO = 0;
-//    unsigned int indexCount;
-
-    if (sphereVAO == 0)
-    {
-        ef->glGenVertexArrays(1, &sphereVAO);
-
-        // unsigned int vbo, ebo;
-        f->glGenBuffers(1, &vbo);
-        f->glGenBuffers(1, &ebo);
-
-        QList<QVector3D> positions;
-        QList<QVector2D> uv;
-        QList<QVector3D> normals;
-
-        std::vector<unsigned int> indices;
-
-        const unsigned int X_SEGMENTS = 64;
-        const unsigned int Y_SEGMENTS = 64;
-        const float PI = 3.14159265359f;
-        for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
-        {
-            for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
-            {
-                float xSegment = (float)x / (float)X_SEGMENTS;
-                float ySegment = (float)y / (float)Y_SEGMENTS;
-                float xPos = cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-                float yPos = cos(ySegment * PI);
-                float zPos = sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-
-                QVector3D vertex(xPos, yPos, zPos);
-                positions.append(vertex);
-
-                QVector2D texture(xSegment, ySegment);
-                uv.append(texture);
-
-                QVector3D normal(xPos, yPos, zPos);
-                normals.append(normal);
-            }
-        }
-
-        bool oddRow = false;
-        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
-        {
-            if (!oddRow) // even rows: y == 0, y == 2; and so on
-            {
-                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
-                {
-                    indices.push_back(y * (X_SEGMENTS + 1) + x);
-                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-                }
-            }
-            else
-            {
-                for (int x = X_SEGMENTS; x >= 0; --x)
-                {
-                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-                    indices.push_back(y * (X_SEGMENTS + 1) + x);
-                }
-            }
-            oddRow = !oddRow;
-        }
-        indexCount = static_cast<unsigned int>(indices.size());
-
-
-        for (unsigned int i = 0; i < positions.size(); ++i)
-        {
-            vert.push_back(positions[i].x());
-            vert.push_back(positions[i].y());
-            vert.push_back(positions[i].z());
-            if (normals.size() > 0)
-            {
-                vert.push_back(normals[i].x());
-                vert.push_back(normals[i].y());
-                vert.push_back(normals[i].z());
-            }
-            if (uv.size() > 0)
-            {
-                vert.push_back(uv[i].x());
-                vert.push_back(uv[i].y());
-            }
-        }
-
-        float vertAndColors[indices.size()];
-
-
-        for (int i = 0; i < indices.size(); i++)
-        {
-            // qDebug() << i;
-            // vertAndColors[i] = vertices[indices[i] - 1];
-            vertAndColors[i] = vert[i];
-        }
-
-        ef->glBindVertexArray(sphereVAO);
-        f->glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        f->glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(float), &vert[0], GL_STATIC_DRAW);
-
-        f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-
-        unsigned int stride = (3 + 2 + 3) * sizeof(float);
-
-        f->glEnableVertexAttribArray(0);
-        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
-        f->glEnableVertexAttribArray(1);
-        f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-
-        f->glEnableVertexAttribArray(2);
-        f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-
-        for (int i = 0; i < positions.size(); ++i)
-        {
-            qDebug() << positions[i];
-        }
-
-        qDebug() << "data: " << &vert[0];
-    }
-*/
-
 
     /*
     //f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertAndColors), vertAndColors, GL_STATIC_DRAW);
@@ -419,9 +333,41 @@ void QOpenGLPanel::initializeGL()
     f->glEnableVertexAttribArray(color);
     */
 
+    // GLuint textureData;
+
+/*
+    QString sunTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/8k_sun.jpg";
+    Texture = QImage(sunTexFileName);
+
+    qDebug() << "texture: " << Texture;
+    qDebug() << "get object data: " <<  getObjectTextureData();
+
+    f->glGenTextures(1, &sunTexture);
+
+    f->glBindTexture(GL_TEXTURE_2D, sunTexture);
+
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    QImage sunIm = Texture.convertToFormat(QImage::Format_RGB888);
+
+    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, sunIm.bits());
+    f->glGenerateMipmap(GL_TEXTURE_2D);
+*/
+
+    // güneş texture u ekleniyor
+    QString sunTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/8k_sun.jpg";
+    sunTexture = loadTexture(sunTexFileName);
+
+    //qDebug() << "sun texture: " << Texture;
+
+
+
     GLuint stride = (3 + 2 + 3) * sizeof(float);
 
-    createSphere(64, 64, 0.0f, 0.0f, 0.0f);
+    sunSize = createSphere(64, 64, 0.0f, 0.0f, 0.0f);
 
     ef->glBindVertexArray(sphereVAO[0]);
     f->glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -432,6 +378,50 @@ void QOpenGLPanel::initializeGL()
 
     // unsigned int stride = (3 + 2 + 3) * sizeof(float);
 
+    position = f->glGetAttribLocation(progID, "position");
+    f->glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    f->glEnableVertexAttribArray(position);
+
+    /*
+    normal = f->glGetAttribLocation(progID, "aNormCoord");
+    f->glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    f->glEnableVertexAttribArray(normal);
+    */
+
+    texture = f->glGetAttribLocation(progID, "aTexCoord");
+    f->glVertexAttribPointer(texture, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    f->glEnableVertexAttribArray(texture);
+
+
+
+    // dünya texture u ekleniyor
+    QString earthTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/earth2048.bmp";
+    earthTexture = loadTexture(earthTexFileName);
+
+    /*
+    Texture = QImage(earthTexFileName);
+
+    qDebug() << "texture: " << Texture;
+    qDebug() << "get object data: " <<  getObjectTextureData();
+
+    f->glGenTextures(1, &earthTexture);
+
+    f->glBindTexture(GL_TEXTURE_2D, earthTexture);
+
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    QImage earthIm = Texture.convertToFormat(QImage::Format_RGB888);
+
+    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, earthIm.bits());
+    f->glGenerateMipmap(GL_TEXTURE_2D);
+    */
+
+
+
+    /*
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 
@@ -440,9 +430,92 @@ void QOpenGLPanel::initializeGL()
 
     f->glEnableVertexAttribArray(2);
     f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    */
+
+    // ay texture u ekleniyor
+    QString moonTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/moon1024.bmp";
+    moonTexture = loadTexture(moonTexFileName);
+
+    /*
+    Texture = QImage(moonTexFileName);
+
+    qDebug() << "texture: " << Texture;
+
+
+    f->glGenTextures(1, &moonTexture);
+
+    f->glBindTexture(GL_TEXTURE_2D, moonTexture);
+
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    QImage moonIm = Texture.convertToFormat(QImage::Format_RGB888);
+
+    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, moonIm.bits());
+    f->glGenerateMipmap(GL_TEXTURE_2D);
+    */
+
+
+    moonSize = createSphere(64, 64, 0.0f, 0.0f, 0.0f);
+
+    ef->glBindVertexArray(sphereVAO[1]);
+    f->glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    f->glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(float), &vert[0], GL_STATIC_DRAW);
+
+    f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[1]);
+    f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+
+    // unsigned int stride = (3 + 2 + 3) * sizeof(float);
+
+    position = f->glGetAttribLocation(progID, "position");
+    f->glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    f->glEnableVertexAttribArray(position);
+
+    /*
+    normal = f->glGetAttribLocation(progID, "aNormCoord");
+    f->glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    f->glEnableVertexAttribArray(normal);
+    */
+
+    texture = f->glGetAttribLocation(progID, "aTexCoord");
+    f->glVertexAttribPointer(texture, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    f->glEnableVertexAttribArray(texture);
+
+
+    /*
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+
+    f->glEnableVertexAttribArray(1);
+    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+
+    f->glEnableVertexAttribArray(2);
+    f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    */
 
 
 
+    // Güneş için dönüş matrisini başlat
+    sunRotateMatrix.setToIdentity();
+    sunScaleMatrix.setToIdentity();
+
+    sunScaleMultp = 0.0f;
+
+    // Dünya için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    earthOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    earthSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    earthOrbitAngle = 0.0f; // dünya etrafında dönme açısı
+    earthSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
+
+    // Ay için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    moonOrbitMatrix.setToIdentity();
+    moonSelfRotateMatrix.setToIdentity();
+    moonOrbitAngle = 0.0f;
+    moonSelfRotateAngle = 0.0f;
+
+/*
     createSphere(64, 64, 0.0f, 0.0f, 0.0f);
 
     // Güneş için dönüş matrisini başlat
@@ -477,7 +550,9 @@ void QOpenGLPanel::initializeGL()
 
     f->glEnableVertexAttribArray(2);
     f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    */
 
+    checkGLError(f, "Enabling and Setting Vertex Attributes");
 }
 
 void QOpenGLPanel::translate(float x, float y, float z)
@@ -539,41 +614,30 @@ void QOpenGLPanel::paintGL()
     f->glUniformMatrix4fv(cameraMatrixID,1,GL_FALSE,cameraMatrix.constData());
     f->glUniformMatrix4fv(projectionMatrixID,1,GL_FALSE,projectionMatrix.constData());
 
-    /*
-    ef->glBindVertexArray(arrays);
-    f->glDrawArrays(GL_TRIANGLES, 0, 60);
-    */
+    sunScaleMatrix.setToIdentity();
+    sunScaleMultp = 2.0f;
+    sunScaleMatrix.scale(sunScaleMultp, sunScaleMultp, sunScaleMultp);
 
     // güneş çizimi
     //f->glUniformMatrix4fv(rotateMatrixID,1,GL_FALSE,rotateMatrix.constData());
     f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, sunRotateMatrix.constData());
+    f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,sunScaleMatrix.constData());
+
+    // güneş texture u etkinleştiriliyor
+    f->glBindTexture(GL_TEXTURE_2D, sunTexture);
+
     ef->glBindVertexArray(sphereVAO[0]);
-    f->glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
 
-    /*
-    secondSphereRotateAngle += 0.5f; // Her çerçevede 0.5 derece döndür
 
-    // Dönüş matrisini güncelleyin
-    secondSphereRotateMatrix.setToIdentity();
-    secondSphereRotateMatrix.rotate(secondSphereRotateAngle, 0.0f, 1.0f, 0.0f); // Y ekseninde döndür
-    */
+
+
+    f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,scaleMatrix.constData());
 
     // Dünya için dönüş açılarını güncelleyin
     earthOrbitAngle += 0.5f; // Dünya'nın Güneş etrafında yörünge hareketi
     earthSelfRotateAngle += 1.0f; // Dünya'nın kendi ekseni etrafında dönüşü
 
-    /*
-    // Çeviri matrisini güncelleyin (küreyi birinci küreden uzaklaştırarak yörüngede döndürün)
-    secondSphereTranslateMatrix.setToIdentity();
-    secondSphereTranslateMatrix.translate(5.0f, 0.0f, 0.0f); // 5 birim sağa kaydır (örnek olarak)
-    */
-
-    /*
-    // Çeviri ve dönüş matrislerini birleştir
-    QMatrix4x4 secondSphereModelMatrix = secondSphereTranslateMatrix * secondSphereRotateMatrix;
-
-    f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, secondSphereModelMatrix.constData());
-    */
 
     // Dünya'nın yörünge matrisini güncelleyin
     earthOrbitMatrix.setToIdentity();
@@ -585,23 +649,27 @@ void QOpenGLPanel::paintGL()
     earthSelfRotateMatrix.rotate(earthSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Y ekseninde döndür
 
 
-    // Dünya'nın model matrisini oluşturun ve çizin
+    // Dünya'nın model matrisini oluşturun ve çiziliyor
     QMatrix4x4 earthModelMatrix = earthOrbitMatrix * earthSelfRotateMatrix;
     f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, earthModelMatrix.constData());
 
+    // dünya texture u etkinleştiriliyor
+    f->glBindTexture(GL_TEXTURE_2D, earthTexture);
+
     ef->glBindVertexArray(sphereVAO[0]);
-    f->glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
 
 
 
-    // Dünya için dönüş açılarını güncelleyin
+
+    // Ay için dönüş açılarını güncelleyin
     moonOrbitAngle += 1.0f; // Dünya'nın Güneş etrafında yörünge hareketi
     moonSelfRotateAngle += 1.0f; // Dünya'nın kendi ekseni etrafında dönüşü
 
     // Ay'ın yörünge matrisini güncelleyin
     moonOrbitMatrix.setToIdentity();
     moonOrbitMatrix.rotate(moonOrbitAngle, 0.0f, 1.0f, 0.0f); // Y ekseninde döndür
-    moonOrbitMatrix.translate(-2.5f, 0.0f, 0.0f); // 5 birim sağa kaydır (örnek olarak yörünge yarıçapı)
+    moonOrbitMatrix.translate(-3.5f, 0.0f, 0.0f); // birim sola kaydır (örnek olarak yörünge yarıçapı)
 
     // Ay'ın kendi ekseni etrafında dönüş matrisini güncelleyin
     moonSelfRotateMatrix.setToIdentity();
@@ -612,8 +680,11 @@ void QOpenGLPanel::paintGL()
     QMatrix4x4 moonMatrix = moonOrbitMatrix * moonSelfRotateMatrix;
     f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, moonMatrix.constData());
 
-    ef->glBindVertexArray(sphereVAO[0]);
-    f->glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    // ay texture u etkinleştiriliyor
+    f->glBindTexture(GL_TEXTURE_2D, moonTexture);
+
+    ef->glBindVertexArray(sphereVAO[1]);
+    f->glDrawElements(GL_TRIANGLE_STRIP, moonSize, GL_UNSIGNED_INT, 0);
 
     /*
     // Çeviri matrisini güncelleyin (küreyi birinci küreden uzaklaştırarak yörüngede döndürün)
