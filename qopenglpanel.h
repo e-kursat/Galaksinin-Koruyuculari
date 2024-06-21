@@ -81,11 +81,11 @@ private:
 
     QMatrix4x4 sunScaleMatrix;
     QMatrix4x4 sunRotateMatrix;
-    QMatrix4x4 earthOrbitMatrix, moonOrbitMatrix;
-    QMatrix4x4 earthSelfRotateMatrix, moonSelfRotateMatrix;
+    QMatrix4x4 earthOrbitMatrix, moonOrbitMatrix, merkurOrbitMatrix, jupiterOrbitMatrix;
+    QMatrix4x4 earthSelfRotateMatrix, moonSelfRotateMatrix, merkurSelfRotateMatrix, jupiterSelfRotateMatrix;
     float sunScaleMultp;
-    float earthOrbitAngle, moonOrbitAngle;
-    float earthSelfRotateAngle, moonSelfRotateAngle;
+    float earthOrbitAngle, moonOrbitAngle, merkurOrbitAngle, jupiterOrbitAngle;
+    float earthSelfRotateAngle, moonSelfRotateAngle, merkurSelfRotateAngle, jupiterSelfRotateAngle;
 
     GLuint sunSize;
     GLuint moonSize;
@@ -96,7 +96,7 @@ private:
     GLuint textureID;
 
     QImage Texture;
-    GLuint sunTexture, earthTexture, moonTexture;
+    GLuint sunTexture, earthTexture, moonTexture, mercuryTexture, jupiterTexture;
 };
 
 #endif // QOPENGLPANEL_H

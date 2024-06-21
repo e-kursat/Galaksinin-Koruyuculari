@@ -5,5 +5,7 @@
         <file>img/8k_sun.jpg</file>
         <file>img/earth2048.bmp</file>
         <file>img/moon1024.bmp</file>
+        <file>img/2k_mercury.jpg</file>
+        <file>img/2k_jupiter.jpg</file>
     </qresource>
 </RCC>
