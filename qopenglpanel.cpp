@@ -20,7 +20,7 @@ void QOpenGLPanel::resetScene()
 
 
     cameraMatrix.setToIdentity();
-    camEyeX = 0.0f, camEyeY= 0.0f, camEyeZ = 25.0f;
+    camEyeX = 20.0f, camEyeY= 50.0f, camEyeZ = 80.0f;
     cameraEye = QVector3D(camEyeX, camEyeY, camEyeZ);
     camCenterX = 0.0f, camCenterY = 0.0f, camCenterZ = 0.0f;
     cameraCenter = QVector3D(camCenterX, camCenterY, camCenterZ);
@@ -32,7 +32,7 @@ void QOpenGLPanel::resetScene()
     verticalAngle = 90.0f;
     aspectRatio = float(this->width())/float(this->width());
     nearPlane = 1.0f;
-    farPlane = 100.0f;
+    farPlane = 200.0f;
     projectionMatrix.perspective(verticalAngle, aspectRatio, nearPlane, farPlane);
 }
 
@@ -110,8 +110,6 @@ const char* QOpenGLPanel::readShaderSource(QString filename)
 
 GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat x_offset, GLfloat y_offset, GLfloat z_offset)
 {
-    // sphereVAO = 0;
-    // unsigned int indexCount;
 
     vert.clear();
     indices.clear();
@@ -119,27 +117,6 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
     positions.clear();
     uv.clear();
     normals.clear();
-
-    /*
-    ef->glGenVertexArrays(1, &sphereVAO);
-
-    // unsigned int vbo, ebo;
-    f->glGenBuffers(1, &vbo);
-    f->glGenBuffers(1, &ebo);
-    */
-
-    /*
-    QList<QVector3D> positions;
-    QList<QVector2D> uv;
-    QList<QVector3D> normals;
-
-    std::vector<unsigned int> indices;
-    */
-
-    /*
-    const unsigned int X_SEGMENTS = 64;
-    const unsigned int Y_SEGMENTS = 64;
-    */
 
     const float PI = 3.14159265359f;
     for (GLuint x = 0; x <= X_SEGMENTS; ++x)
@@ -167,7 +144,7 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
     bool oddRow = false;
     for (GLuint y = 0; y < Y_SEGMENTS; ++y)
     {
-        if (!oddRow) // even rows: y == 0, y == 2; and so on
+        if (!oddRow)
         {
             for (GLuint x = 0; x <= X_SEGMENTS; ++x)
             {
@@ -211,39 +188,8 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
 
     for (int i = 0; i < indices.size(); i++)
     {
-        // qDebug() << i;
-        // vertAndColors[i] = vertices[indices[i] - 1];
         vertAndColors[i] = vert[i];
     }
-
-    /*
-    ef->glBindVertexArray(sphereVAO);
-    f->glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    f->glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(float), &vert[0], GL_STATIC_DRAW);
-
-    f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-
-    unsigned int stride = (3 + 2 + 3) * sizeof(float);
-
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
-    f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-
-    f->glEnableVertexAttribArray(2);
-    f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    */
-
-    /*
-    for (int i = 0; i < positions.size(); ++i)
-    {
-        qDebug() << positions[i];
-    }
-
-    qDebug() << "data: " << &vert[0];
-    */
 
     return indexCount;
 }
@@ -277,8 +223,6 @@ GLuint QOpenGLPanel::loadTexture(QString fileName){
     f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, im.bits());
     f->glGenerateMipmap(GL_TEXTURE_2D);
 
-    qDebug() << "sun: " << Texture;
-
     return textureData;
 }
 
@@ -289,9 +233,9 @@ void QOpenGLPanel::initializeGL()
     QOpenGLExtraFunctions *ef = getGLExtraFunctions();
     ef->initializeOpenGLFunctions();
 
-    f->glClearColor(0.0, 0.4, 0.7, 0.0);
+    f->glClearColor(0.0, 0.0, 0.0, 0.0);
 
-    // derinlik penceresini aktifleştir
+    // derinlik penceresini aktifleştirir
     f->glEnable(GL_DEPTH_TEST);
 
     initializeShaderProgram(":simple.vert", ":simple.frag",f);
@@ -302,73 +246,23 @@ void QOpenGLPanel::initializeGL()
     cameraMatrixID = f->glGetUniformLocation(progID, "cameraMatrix");
     projectionMatrixID = f->glGetUniformLocation(progID, "projectionMatrix");
 
-    /*
-    ef->glGenVertexArrays(2, &arrays);
-    f->glGenBuffers(1,&triangleData);
-    ef->glBindVertexArray(arrays);
-    f->glBindBuffer(GL_ARRAY_BUFFER, triangleData);
-    */
-
-    //sphereVAO = 0;
-
     ef->glGenVertexArrays(2, &sphereVAO[0]);
 
-    // unsigned int vbo, ebo;
     f->glGenBuffers(2, &vbo[0]);
     f->glGenBuffers(2, &ebo[0]);
 
 
     checkGLError(f, "Generating and Binding Vertex Arrays");
 
-    /*
-    //f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertAndColors), vertAndColors, GL_STATIC_DRAW);
-
-    position = f->glGetAttribLocation(progID, "position");
-    f->glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, sizeof(float)*6, (void*)0);
-    f->glEnableVertexAttribArray(position);
-
-    color = f->glGetAttribLocation(progID, "color");
-    f->glVertexAttribPointer(color, 3, GL_FLOAT, GL_FALSE, sizeof(float)*6, (void*)(sizeof(float)*3));
-    f->glEnableVertexAttribArray(color);
-    */
-
-    // GLuint textureData;
-
-/*
-    QString sunTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/8k_sun.jpg";
-    Texture = QImage(sunTexFileName);
-
-    qDebug() << "texture: " << Texture;
-    qDebug() << "get object data: " <<  getObjectTextureData();
-
-    f->glGenTextures(1, &sunTexture);
-
-    f->glBindTexture(GL_TEXTURE_2D, sunTexture);
-
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    QImage sunIm = Texture.convertToFormat(QImage::Format_RGB888);
-
-    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, sunIm.bits());
-    f->glGenerateMipmap(GL_TEXTURE_2D);
-*/
 
     // güneş texture u ekleniyor
-    //QString sunTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/8k_sun.jpg";
     QString sunTexFileName = ":/img/8k_sun.jpg";
-
     sunTexture = loadTexture(sunTexFileName);
-
-    //qDebug() << "sun texture: " << Texture;
-
-
 
     GLuint stride = (3 + 2 + 3) * sizeof(float);
 
     sunSize = createSphere(64, 64, 0.0f, 0.0f, 0.0f);
+
 
     ef->glBindVertexArray(sphereVAO[0]);
     f->glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -377,96 +271,52 @@ void QOpenGLPanel::initializeGL()
     f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[0]);
     f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-    // unsigned int stride = (3 + 2 + 3) * sizeof(float);
 
     position = f->glGetAttribLocation(progID, "position");
     f->glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     f->glEnableVertexAttribArray(position);
 
-    /*
-    normal = f->glGetAttribLocation(progID, "aNormCoord");
-    f->glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    f->glEnableVertexAttribArray(normal);
-    */
 
     texture = f->glGetAttribLocation(progID, "aTexCoord");
     f->glVertexAttribPointer(texture, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     f->glEnableVertexAttribArray(texture);
 
 
-
     // dünya texture u ekleniyor
-    // QString earthTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/earth2048.bmp";
     QString earthTexFileName = ":/img/earth2048.bmp";
     earthTexture = loadTexture(earthTexFileName);
 
-    /*
-    Texture = QImage(earthTexFileName);
-
-    qDebug() << "texture: " << Texture;
-    qDebug() << "get object data: " <<  getObjectTextureData();
-
-    f->glGenTextures(1, &earthTexture);
-
-    f->glBindTexture(GL_TEXTURE_2D, earthTexture);
-
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    QImage earthIm = Texture.convertToFormat(QImage::Format_RGB888);
-
-    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, earthIm.bits());
-    f->glGenerateMipmap(GL_TEXTURE_2D);
-    */
-
-
-
-    /*
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
-    f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-
-    f->glEnableVertexAttribArray(2);
-    f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    */
-
     // ay texture u ekleniyor
-    // QString moonTexFileName = "D:/AnaKlasorler/Projeler/GalaksininKoruyuculari/icosphere_deneme/moon1024.bmp";
     QString moonTexFileName = ":/img/moon1024.bmp";
     moonTexture = loadTexture(moonTexFileName);
 
-
+    //merkür
     QString mercuryTexFileName = ":/img/2k_mercury.jpg";
     mercuryTexture = loadTexture(mercuryTexFileName);
 
+    //venus
+    QString venusTexFileName = ":/img/2k_venus_surface.jpg";
+    venusTexture = loadTexture(venusTexFileName);
 
+    //mars
+    QString marsTexFileName = ":/img/2k_mars.jpg";
+    marsTexture = loadTexture(marsTexFileName);
+
+    //jupiter
     QString jupiterTexFileName = ":/img/2k_jupiter.jpg";
     jupiterTexture = loadTexture(jupiterTexFileName);
 
-    /*
-    Texture = QImage(moonTexFileName);
+    //saturn
+    QString saturnTexFileName = ":/img/saturn.jpg";
+    saturnTexture = loadTexture(saturnTexFileName);
 
-    qDebug() << "texture: " << Texture;
+    //uranus
+    QString uranusTexFileName = ":/img/2k_uranus.jpg";
+    uranusTexture = loadTexture(uranusTexFileName);
 
-
-    f->glGenTextures(1, &moonTexture);
-
-    f->glBindTexture(GL_TEXTURE_2D, moonTexture);
-
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    QImage moonIm = Texture.convertToFormat(QImage::Format_RGB888);
-
-    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, moonIm.bits());
-    f->glGenerateMipmap(GL_TEXTURE_2D);
-    */
+    //neptune
+    QString neptuneTexFileName = ":/img/2k_neptune.jpg";
+    neptuneTexture = loadTexture(neptuneTexFileName);
 
 
     moonSize = createSphere(64, 64, 0.0f, 0.0f, 0.0f);
@@ -478,35 +328,14 @@ void QOpenGLPanel::initializeGL()
     f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[1]);
     f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-    // unsigned int stride = (3 + 2 + 3) * sizeof(float);
 
     position = f->glGetAttribLocation(progID, "position");
     f->glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     f->glEnableVertexAttribArray(position);
 
-    /*
-    normal = f->glGetAttribLocation(progID, "aNormCoord");
-    f->glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    f->glEnableVertexAttribArray(normal);
-    */
-
     texture = f->glGetAttribLocation(progID, "aTexCoord");
     f->glVertexAttribPointer(texture, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     f->glEnableVertexAttribArray(texture);
-
-
-    /*
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
-    f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-
-    f->glEnableVertexAttribArray(2);
-    f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    */
-
-
 
     // Güneş için dönüş matrisini başlat
     sunRotateMatrix.setToIdentity();
@@ -515,53 +344,75 @@ void QOpenGLPanel::initializeGL()
     sunScaleMultp = 0.0f;
 
     // Dünya için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    earthScaleMatrix.setToIdentity();
     earthOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
     earthSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
     earthOrbitAngle = 0.0f; // dünya etrafında dönme açısı
     earthSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
     // Ay için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    moonScaleMatrix.setToIdentity();
     moonOrbitMatrix.setToIdentity();
     moonSelfRotateMatrix.setToIdentity();
     moonOrbitAngle = 0.0f;
     moonSelfRotateAngle = 0.0f;
 
-/*
-    createSphere(64, 64, 0.0f, 0.0f, 0.0f);
+    //merkür
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    merkurScaleMatrix.setToIdentity();
+    merkurOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    merkurSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    merkurOrbitAngle = 0.0f; // etrafında dönme açısı
+    merkurSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
-    // Güneş için dönüş matrisini başlat
-    sunRotateMatrix.setToIdentity();
+    //venüs
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    venusScaleMatrix.setToIdentity();
+    venusOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    venusSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    venusOrbitAngle = 0.0f; // etrafında dönme açısı
+    venusSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
-    // Dünya için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
-    earthOrbitMatrix.setToIdentity();
-    earthSelfRotateMatrix.setToIdentity();
-    earthOrbitAngle = 0.0f;
-    earthSelfRotateAngle = 0.0f;
+    //mars
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    marsScaleMatrix.setToIdentity();
+    marsOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    marsSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    marsOrbitAngle = 0.0f; // etrafında dönme açısı
+    marsSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
-    // Ay için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
-    moonOrbitMatrix.setToIdentity();
-    moonSelfRotateMatrix.setToIdentity();
-    moonOrbitAngle = 0.0f;
-    moonSelfRotateAngle = 0.0f;
+    //jupiter
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    jupiterScaleMatrix.setToIdentity();
+    jupiterOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    jupiterSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    jupiterOrbitAngle = 0.0f; // etrafında dönme açısı
+    jupiterSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
+    //satürn
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    saturnScaleMatrix.setToIdentity();
+    saturnOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    saturnSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    saturnOrbitAngle = 0.0f; // etrafında dönme açısı
+    saturnSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
-    ef->glBindVertexArray(sphereVAO[1]);
-    f->glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    f->glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(float), &vert[0], GL_STATIC_DRAW);
+    //uranus
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    uranusScaleMatrix.setToIdentity();
+    uranusOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    uranusSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    uranusOrbitAngle = 0.0f; // etrafında dönme açısı
+    uranusSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
-    f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[1]);
-    f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    //neptune
+    // için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
+    neptuneScaleMatrix.setToIdentity();
+    neptuneOrbitMatrix.setToIdentity(); // güneş etrafında dönme matriksi
+    neptuneSelfRotateMatrix.setToIdentity();  // kendi etrafında dönme matriksi
+    neptuneOrbitAngle = 0.0f; // etrafında dönme açısı
+    neptuneSelfRotateAngle = 0.0f;    // kendi etrafında dönme açısı
 
-
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
-    f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-
-    f->glEnableVertexAttribArray(2);
-    f->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    */
 
     checkGLError(f, "Enabling and Setting Vertex Attributes");
 }
@@ -612,14 +463,6 @@ void QOpenGLPanel::paintGL()
 
     f->glUseProgram(progID);
 
-    /*
-    f->glUniformMatrix4fv(translateMatrixID,1,GL_FALSE,translateMatrix.constData());
-    f->glUniformMatrix4fv(rotateMatrixID,1,GL_FALSE,rotateMatrix.constData());
-    f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,scaleMatrix.constData());
-    f->glUniformMatrix4fv(cameraMatrixID,1,GL_FALSE,cameraMatrix.constData());
-    f->glUniformMatrix4fv(projectionMatrixID,1,GL_FALSE,projectionMatrix.constData());
-    */
-
     f->glUniformMatrix4fv(translateMatrixID,1,GL_FALSE,translateMatrix.constData());
     f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,scaleMatrix.constData());
     f->glUniformMatrix4fv(cameraMatrixID,1,GL_FALSE,cameraMatrix.constData());
@@ -629,12 +472,17 @@ void QOpenGLPanel::paintGL()
         // Güneş işlemleri
 
         sunScaleMatrix.setToIdentity();
-        sunScaleMultp = 2.0f;
+        sunScaleMultp = 5.0f;
         sunScaleMatrix.scale(sunScaleMultp, sunScaleMultp, sunScaleMultp);
 
+        sunSelfRotateAngle += 0.5f;
+        sunRotateMatrix.setToIdentity();
+        sunRotateMatrix.rotate(sunSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
+
+        QMatrix4x4 sunModelMatrix = sunRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, sunModelMatrix.constData());
+
         // güneş çizimi
-        //f->glUniformMatrix4fv(rotateMatrixID,1,GL_FALSE,rotateMatrix.constData());
-        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, sunRotateMatrix.constData());
         f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,sunScaleMatrix.constData());
 
         // güneş texture u etkinleştiriliyor
@@ -644,28 +492,101 @@ void QOpenGLPanel::paintGL()
         f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
     }
 
+    {
+        // Merkür işlemleri
+
+        merkurScaleMatrix.setToIdentity();
+        float MerkurScaleMulp = 0.9f;
+        merkurScaleMatrix.scale(MerkurScaleMulp, MerkurScaleMulp, MerkurScaleMulp);
+
+
+
+        // için dönüş açılarını günceller
+        merkurOrbitAngle += 1.0f; // Güneş etrafında yörünge hareketi
+        merkurSelfRotateAngle += 0.5f; //kendi ekseni etrafında dönüşü
+
+
+        //yörünge matrisini günceller
+        merkurOrbitMatrix.setToIdentity();
+        merkurOrbitMatrix.rotate(merkurOrbitAngle, 0.0f, 5.0f, 0.0f); // Yörüngede Y ekseninde döndür
+        merkurOrbitMatrix.translate(0.39f * 20.0f, 0.0f, 0.0f);
+
+        // kendi ekseni etrafında dönüş matrisini günceller
+        merkurSelfRotateMatrix.setToIdentity();
+        merkurSelfRotateMatrix.rotate(merkurSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
+
+
+        // model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 merkurModelMatrix = merkurOrbitMatrix * merkurSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,merkurScaleMatrix.constData());
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, merkurModelMatrix.constData());
+
+
+        // texture u etkinleştiriliyor
+        f->glBindTexture(GL_TEXTURE_2D, mercuryTexture);
+
+        ef->glBindVertexArray(sphereVAO[0]);
+        f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
+    }
+
+    {
+        // Venus işlemleri
+        venusScaleMatrix.setToIdentity();
+        float venusScaleMulp = 1.0f;
+        venusScaleMatrix.scale(venusScaleMulp, venusScaleMulp, venusScaleMulp);
+
+        // için dönüş açılarını günceller
+        venusOrbitAngle += 0.9f; // Güneş etrafında yörünge hareketi
+        venusSelfRotateAngle += 0.8f; //kendi ekseni etrafında dönüşü
+
+
+        // yörünge matrisini günceller
+        venusOrbitMatrix.setToIdentity();
+        venusOrbitMatrix.rotate(venusOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
+        venusOrbitMatrix.translate(0.7f + 22.0f, 0.0f, 0.0f);
+
+        // kendi ekseni etrafında dönüş matrisini günceller
+        venusSelfRotateMatrix.setToIdentity();
+        venusSelfRotateMatrix.rotate(merkurSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
+
+
+        // model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 venusModelMatrix = venusOrbitMatrix * venusSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,venusScaleMatrix.constData());
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, venusModelMatrix.constData());
+
+        // texture u etkinleştiriliyor
+        f->glBindTexture(GL_TEXTURE_2D, venusTexture);
+
+        ef->glBindVertexArray(sphereVAO[0]);
+        f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
+    }
+
 
     {
         // Dünya işlemleri
+        earthScaleMatrix.setToIdentity();
+        float earthScaleMulp = 1.0f;
+        earthScaleMatrix.scale(earthScaleMulp, earthScaleMulp, earthScaleMulp);
 
         // Dünya için dönüş açılarını günceller
-        earthOrbitAngle += 0.5f; // Dünya'nın Güneş etrafında yörünge hareketi
-        earthSelfRotateAngle += 1.0f; // Dünya'nın kendi ekseni etrafında dönüşü
+        earthOrbitAngle += 0.8f; // Dünya'nın Güneş etrafında yörünge hareketi
+        earthSelfRotateAngle += 1.3f; // Dünya'nın kendi ekseni etrafında dönüşü
 
 
         // Dünya'nın yörünge matrisini günceller
         earthOrbitMatrix.setToIdentity();
         earthOrbitMatrix.rotate(earthOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
-        earthOrbitMatrix.translate(5.0f, 0.0f, 0.0f); // 5 birim sağa kaydır (örnek olarak yörünge yarıçapı)
+        earthOrbitMatrix.translate(-1.0f * 25.0f, 0.0f);
 
         // Dünya'nın kendi ekseni etrafında dönüş matrisini günceller
         earthSelfRotateMatrix.setToIdentity();
-        earthSelfRotateMatrix.rotate(earthSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etradında Y ekseninde döndür
+        earthSelfRotateMatrix.rotate(earthSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
 
 
-        // Dünya'nın model matrisini oluşturun ve çiziliyor
-        QMatrix4x4 earthModelMatrix = earthOrbitMatrix * earthSelfRotateMatrix;
-        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,scaleMatrix.constData());
+        // Dünya'nın model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 earthModelMatrix = earthOrbitMatrix * earthSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,earthScaleMatrix.constData());
         f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, earthModelMatrix.constData());
 
         // dünya texture u etkinleştiriliyor
@@ -678,30 +599,28 @@ void QOpenGLPanel::paintGL()
 
     {
         // Ay işlemleri
+        moonScaleMatrix.setToIdentity();
+        float moonScaleMulp = 0.4f;
+        moonScaleMatrix.scale(moonScaleMulp, moonScaleMulp, moonScaleMulp);
 
-        /*
-        // Ay için dönüş açılarını güncelleyin
-        moonOrbitAngle += 1.0f; // Dünya'nın Güneş etrafında yörünge hareketi
-        moonSelfRotateAngle += 1.0f; // Dünya'nın kendi ekseni etrafında dönüşü
-        */
-
-        // Ay için dönüş açılarını güncelleyin
+        // Ay için dönüş açılarını güncelleniyor
         moonOrbitAngle += 1.0f; // Ay'ın Dünya etrafında yörünge hareketi
         moonSelfRotateAngle += 0.5f; // Ay'ın kendi ekseni etrafında dönüşü
 
-        // Ay'ın yörünge matrisini güncelleyin
+        // Ay'ın yörünge matrisini güncelleniyor
         moonOrbitMatrix.setToIdentity();
         moonOrbitMatrix.rotate(moonOrbitAngle, 0.0f, 1.0f, 0.0f); // Y ekseninde döndür
-        moonOrbitMatrix.translate(3.0f, 0.0f, 0.0f); // birim sola kaydır (örnek olarak yörünge yarıçapı)
+        moonOrbitMatrix.translate(3.0f, 0.0f, 0.0f);
 
-        // Ay'ın kendi ekseni etrafında dönüş matrisini güncelleyin
+        // Ay'ın kendi ekseni etrafında dönüş matrisini güncelleniyor
         moonSelfRotateMatrix.setToIdentity();
         moonSelfRotateMatrix.rotate(moonSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Y ekseninde döndür
 
 
-        // Dünya'nın model matrisini oluşturun ve çizin
-        QMatrix4x4 moonMatrix = earthOrbitMatrix * moonOrbitMatrix * moonSelfRotateMatrix;
+        // Dünya'nın model matrisini oluşturuluyor ve çiziliyoe
+        QMatrix4x4 moonMatrix = earthOrbitMatrix * moonOrbitMatrix * moonSelfRotateMatrix * rotateMatrix;
         f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, moonMatrix.constData());
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,moonScaleMatrix.constData());
 
         // ay texture u etkinleştiriliyor
         f->glBindTexture(GL_TEXTURE_2D, moonTexture);
@@ -711,89 +630,177 @@ void QOpenGLPanel::paintGL()
     }
 
     {
-        // Merkür işlemleri
+        // Mars işlemleri
 
-        // Dünya için dönüş açılarını günceller
-        merkurOrbitAngle += 0.5f; // Dünya'nın Güneş etrafında yörünge hareketi
-        merkurSelfRotateAngle += 1.0f; // Dünya'nın kendi ekseni etrafında dönüşü
+        marsScaleMatrix.setToIdentity();
+        float marsScaleMulp = 1.0f;
+        marsScaleMatrix.scale(marsScaleMulp, marsScaleMulp, marsScaleMulp);
 
-
-        // Dünya'nın yörünge matrisini günceller
-        merkurOrbitMatrix.setToIdentity();
-        merkurOrbitMatrix.rotate(merkurOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
-        merkurOrbitMatrix.translate(-10.0f, 0.0f, 0.0f); // 5 birim sağa kaydır (örnek olarak yörünge yarıçapı)
-
-        // Dünya'nın kendi ekseni etrafında dönüş matrisini günceller
-        merkurSelfRotateMatrix.setToIdentity();
-        merkurSelfRotateMatrix.rotate(merkurSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etradında Y ekseninde döndür
+        // için dönüş açılarını günceller
+        marsOrbitAngle += 0.5f; // Güneş etrafında yörünge hareketi
+        marsSelfRotateAngle += 1.0f; //kendi ekseni etrafında dönüşü
 
 
-        // Dünya'nın model matrisini oluşturun ve çiziliyor
-        QMatrix4x4 merkurModelMatrix = merkurOrbitMatrix * merkurSelfRotateMatrix;
-        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,scaleMatrix.constData());
-        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, merkurModelMatrix.constData());
+        // yörünge matrisini günceller
+        marsOrbitMatrix.setToIdentity();
+        marsOrbitMatrix.rotate(marsOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
+        marsOrbitMatrix.translate(-1.0f * 35.0f, 0.0f, 0.0f);
 
-        // merkur texture u etkinleştiriliyor
-        f->glBindTexture(GL_TEXTURE_2D, mercuryTexture);
+        // kendi ekseni etrafında dönüş matrisini günceller
+        marsSelfRotateMatrix.setToIdentity();
+        marsSelfRotateMatrix.rotate(marsSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
+
+
+        // model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 marsModelMatrix = marsOrbitMatrix * marsSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,marsScaleMatrix.constData());
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, marsModelMatrix.constData());
+
+        // texture u etkinleştiriliyor
+        f->glBindTexture(GL_TEXTURE_2D, marsTexture);
 
         ef->glBindVertexArray(sphereVAO[0]);
         f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
     }
 
+
+
+
     {
-        // Merkür işlemleri
+        // jupiter işlemleri
 
-        // Dünya için dönüş açılarını günceller
-        jupiterOrbitAngle += 0.3f; // Dünya'nın Güneş etrafında yörünge hareketi
-        jupiterSelfRotateAngle += 1.0f; // Dünya'nın kendi ekseni etrafında dönüşü
+        jupiterScaleMatrix.setToIdentity();
+        float jupiteScaleMulp = 2.5f;
+        jupiterScaleMatrix.scale(jupiteScaleMulp, jupiteScaleMulp, jupiteScaleMulp);
+
+        // dönüş açılarını günceller
+        jupiterOrbitAngle += 0.4f;
+        jupiterSelfRotateAngle += 3.0f;
 
 
-        // Dünya'nın yörünge matrisini günceller
+        // yörünge matrisini günceller
         jupiterOrbitMatrix.setToIdentity();
         jupiterOrbitMatrix.rotate(jupiterOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
-        jupiterOrbitMatrix.translate(-15.0f, 0.0f, 0.0f); // 5 birim sağa kaydır (örnek olarak yörünge yarıçapı)
+        jupiterOrbitMatrix.translate(1.0f * 48.0f, 0.0f, 0.0f);
 
         // jupiter'in kendi ekseni etrafında dönüş matrisini günceller
         jupiterSelfRotateMatrix.setToIdentity();
-        jupiterSelfRotateMatrix.rotate(jupiterSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etradında Y ekseninde döndür
+        jupiterSelfRotateMatrix.rotate(jupiterSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
 
 
-        // Dünya'nın model matrisini oluşturun ve çiziliyor
-        QMatrix4x4 jupiterModelMatrix = jupiterOrbitMatrix * jupiterSelfRotateMatrix;
-        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,scaleMatrix.constData());
+        //  model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 jupiterModelMatrix = jupiterOrbitMatrix * jupiterSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,jupiterScaleMatrix.constData());
         f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, jupiterModelMatrix.constData());
 
-        // merkur texture u etkinleştiriliyor
+        //  texture u etkinleştiriliyor
         f->glBindTexture(GL_TEXTURE_2D, jupiterTexture);
 
         ef->glBindVertexArray(sphereVAO[0]);
         f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
     }
 
+    {
+        // saturn işlemleri
+
+        saturnScaleMatrix.setToIdentity();
+        float saturnScaleMulp = 2.0f;
+        saturnScaleMatrix.scale(saturnScaleMulp, saturnScaleMulp, saturnScaleMulp);
+
+        //  için dönüş açılarını günceller
+        saturnOrbitAngle += 0.3f; //  Güneş etrafında yörünge hareketi
+        saturnSelfRotateAngle += 2.7f; //  kendi ekseni etrafında dönüşü
 
 
+        // yörünge matrisini günceller
+        saturnOrbitMatrix.setToIdentity();
+        saturnOrbitMatrix.rotate(saturnOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
+        saturnOrbitMatrix.translate(-1.0f * 58.0f, 0.0f, 0.0f);
+
+        //  kendi ekseni etrafında dönüş matrisini günceller
+        saturnSelfRotateMatrix.setToIdentity();
+        saturnSelfRotateMatrix.rotate(jupiterSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
 
 
+        // model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 saturnModelMatrix = saturnOrbitMatrix * saturnSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,saturnScaleMatrix.constData());
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, saturnModelMatrix.constData());
 
-    /*
-    // Çeviri matrisini güncelleyin (küreyi birinci küreden uzaklaştırarak yörüngede döndürün)
-    secondSphereTranslateMatrix.setToIdentity();
-    secondSphereTranslateMatrix.translate(-5.0f, 0.0f, 0.0f); // 5 birim sağa kaydır (örnek olarak)
+        // texture u etkinleştiriliyor
+        f->glBindTexture(GL_TEXTURE_2D, saturnTexture);
+
+        ef->glBindVertexArray(sphereVAO[0]);
+        f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
+    }
 
 
-    QMatrix4x4 thirdSphereModelMatrix = secondSphereTranslateMatrix * secondSphereRotateMatrix;
-    */
+    {
+        // uranus işlemleri
+        uranusScaleMatrix.setToIdentity();
+        float uranusScaleMulp = 1.5f;
+        uranusScaleMatrix.scale(uranusScaleMulp, uranusScaleMulp, uranusScaleMulp);
 
-    /*
-    // Dünya'nın model matrisini oluşturun ve çizin
-    QMatrix4x4 earthModelMatrix = earthOrbitMatrix * earthSelfRotateMatrix;
+        //  için dönüş açılarını günceller
+        uranusOrbitAngle += 0.2f; //  Güneş etrafında yörünge hareketi
+        uranusSelfRotateAngle += 2.0f; //  kendi ekseni etrafında dönüşü
 
-    // Çeviri ve dönüş matrislerini birleştir
-    // f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, thirdSphereModelMatrix.constData());
-    f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, earthModelMatrix.constData());
-    ef->glBindVertexArray(sphereVAO[1]);
-    f->glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
-    */
+
+        // yörünge matrisini günceller
+        uranusOrbitMatrix.setToIdentity();
+        uranusOrbitMatrix.rotate(uranusOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
+        uranusOrbitMatrix.translate(1.0f * 68.0f, 0.0f, 0.0f);
+
+        //  kendi ekseni etrafında dönüş matrisini günceller
+        uranusSelfRotateMatrix.setToIdentity();
+        uranusSelfRotateMatrix.rotate(uranusSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
+
+
+        // model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 uranusModelMatrix = uranusOrbitMatrix * uranusSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE,uranusScaleMatrix.constData());
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, uranusModelMatrix.constData());
+
+        // texture u etkinleştiriliyor
+        f->glBindTexture(GL_TEXTURE_2D, uranusTexture);
+
+        ef->glBindVertexArray(sphereVAO[0]);
+        f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
+    }
+
+
+    {
+        // neptune işlemleri
+        neptuneScaleMatrix.setToIdentity();
+        float neptuneScaleMulp = 1.5f;
+        neptuneScaleMatrix.scale(neptuneScaleMulp, neptuneScaleMulp, neptuneScaleMulp);
+
+        //  için dönüş açılarını günceller
+        neptuneOrbitAngle += 0.1f; //  Güneş etrafında yörünge hareketi
+        neptuneSelfRotateAngle += 2.5f; //  kendi ekseni etrafında dönüşü
+
+
+        // yörünge matrisini günceller
+        neptuneOrbitMatrix.setToIdentity();
+        neptuneOrbitMatrix.rotate(neptuneOrbitAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
+        neptuneOrbitMatrix.translate(-1.0f * 75.0f, 0.0f, 0.0f);
+
+        //  kendi ekseni etrafında dönüş matrisini günceller
+        neptuneSelfRotateMatrix.setToIdentity();
+        neptuneSelfRotateMatrix.rotate(neptuneSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Kendi etrafında Y ekseninde döndür
+
+
+        // model matrisini oluşturuluyor ve çiziliyor
+        QMatrix4x4 neptuneModelMatrix = neptuneOrbitMatrix * neptuneSelfRotateMatrix * rotateMatrix;
+        f->glUniformMatrix4fv(scaleMatrixID,1,GL_FALSE, neptuneScaleMatrix.constData());
+        f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, neptuneModelMatrix.constData());
+
+        // texture u etkinleştiriliyor
+        f->glBindTexture(GL_TEXTURE_2D, neptuneTexture);
+
+        ef->glBindVertexArray(sphereVAO[0]);
+        f->glDrawElements(GL_TRIANGLE_STRIP, sunSize, GL_UNSIGNED_INT, 0);
+    }
 
     update();
 }

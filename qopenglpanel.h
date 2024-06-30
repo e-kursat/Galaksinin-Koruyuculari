@@ -81,14 +81,16 @@ private:
 
     QMatrix4x4 sunScaleMatrix;
     QMatrix4x4 sunRotateMatrix;
-    QMatrix4x4 earthOrbitMatrix, moonOrbitMatrix, merkurOrbitMatrix, jupiterOrbitMatrix;
-    QMatrix4x4 earthSelfRotateMatrix, moonSelfRotateMatrix, merkurSelfRotateMatrix, jupiterSelfRotateMatrix;
+    QMatrix4x4 earthScaleMatrix, moonScaleMatrix, merkurScaleMatrix, venusScaleMatrix, marsScaleMatrix, jupiterScaleMatrix, saturnScaleMatrix, uranusScaleMatrix, neptuneScaleMatrix;
+    QMatrix4x4 earthOrbitMatrix, moonOrbitMatrix, merkurOrbitMatrix, jupiterOrbitMatrix, venusOrbitMatrix, marsOrbitMatrix, saturnOrbitMatrix, uranusOrbitMatrix, neptuneOrbitMatrix;
+    QMatrix4x4 earthSelfRotateMatrix, moonSelfRotateMatrix, merkurSelfRotateMatrix, jupiterSelfRotateMatrix, venusSelfRotateMatrix, marsSelfRotateMatrix, saturnSelfRotateMatrix, uranusSelfRotateMatrix, neptuneSelfRotateMatrix;
     float sunScaleMultp;
-    float earthOrbitAngle, moonOrbitAngle, merkurOrbitAngle, jupiterOrbitAngle;
-    float earthSelfRotateAngle, moonSelfRotateAngle, merkurSelfRotateAngle, jupiterSelfRotateAngle;
+    float earthOrbitAngle, moonOrbitAngle, merkurOrbitAngle, jupiterOrbitAngle, venusOrbitAngle, marsOrbitAngle, saturnOrbitAngle, uranusOrbitAngle, neptuneOrbitAngle;
+    float sunSelfRotateAngle, earthSelfRotateAngle, moonSelfRotateAngle, merkurSelfRotateAngle, jupiterSelfRotateAngle, venusSelfRotateAngle, marsSelfRotateAngle, saturnSelfRotateAngle, uranusSelfRotateAngle, neptuneSelfRotateAngle;
 
     GLuint sunSize;
     GLuint moonSize;
+    GLuint earthSize, merkurSize, jupiterSize, venusSize, marsSize, saturnSize, uranusSize, neptuneSize;
 
 
 
@@ -96,7 +98,7 @@ private:
     GLuint textureID;
 
     QImage Texture;
-    GLuint sunTexture, earthTexture, moonTexture, mercuryTexture, jupiterTexture;
+    GLuint sunTexture, earthTexture, moonTexture, mercuryTexture, jupiterTexture, venusTexture, marsTexture, saturnTexture, uranusTexture, neptuneTexture;
 };
 
 #endif // QOPENGLPANEL_H
