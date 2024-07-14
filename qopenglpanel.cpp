@@ -108,9 +108,12 @@ const char* QOpenGLPanel::readShaderSource(QString filename)
     return source;
 }
 
+// Kure olusturma fonksiyonu
+// Bu fonksiyon, kure olusturma uzerine yaptigimiz uzun sureli arastirmalar sonucunda internetteki bir çalışmadan esinlenilmiştir.
+// Bu fonksiyon uzerine bircok duzenleme ve ekleme yaptik.
 GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat x_offset, GLfloat y_offset, GLfloat z_offset)
 {
-
+    // vectorler temizleniyor.
     vert.clear();
     indices.clear();
 
@@ -118,6 +121,8 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
     uv.clear();
     normals.clear();
 
+    // kurenin dikey ve yataydaki cozunurluklerine gore vertex, texture ve normal bilgileri hesaplaniyor.
+    // hesaplanan vertex bilgileri, fonksiyona girilen (x_offset, y_offset ve z_offset) bilgileriyle uzayda istenilen yere ötelenebilmektedir.
     const float PI = 3.14159265359f;
     for (GLuint x = 0; x <= X_SEGMENTS; ++x)
     {
@@ -130,17 +135,21 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
             float yPos = (cos(ySegment * PI)) + y_offset;
             float zPos = (sin(xSegment * 2.0f * PI) * sin(ySegment * PI)) + z_offset;
 
+            // hesaplanan vertex bilgileri 3 boyutlu koordinata donusturuluyor ve positions arrayine ekleniyor
             QVector3D vertex(xPos, yPos, zPos);
             positions.append(vertex);
 
+            // hesaplanan texture bilgileri 2 boyutlu koordinata donusturuluyor ve uv arrayine ekleniyor
             QVector2D texture(xSegment, ySegment);
             uv.append(texture);
 
+            // hesaplanan normal bilgileri 3 boyutlu koordinata donusturuluyor ve normals arrayine ekleniyor
             QVector3D normal(xPos, yPos, zPos);
             normals.append(normal);
         }
     }
 
+    // kurenin, ucgenlerle cizilebilmesi icin her satırdaki ucgenleri saglayan vertexlerin indexleri olusturuluyor.
     bool oddRow = false;
     for (GLuint y = 0; y < Y_SEGMENTS; ++y)
     {
@@ -162,9 +171,11 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
         }
         oddRow = !oddRow;
     }
+
+    // indexlerin sayısı tutuluyor.
     indexCount = static_cast<GLuint>(indices.size());
 
-
+    // vertex positionları, normal positionları ve texture positionları aynı dizide birlestiriliyor.
     for (GLuint i = 0; i < positions.size(); ++i)
     {
         vert.push_back(positions[i].x());
@@ -183,26 +194,23 @@ GLuint QOpenGLPanel::createSphere(GLuint X_SEGMENTS, GLuint Y_SEGMENTS, GLfloat 
         }
     }
 
-    float vertAndColors[indices.size()];
-
-
-    for (int i = 0; i < indices.size(); i++)
-    {
-        vertAndColors[i] = vert[i];
-    }
-
+    // farklı kureler olusturulursa her kureyi farklı farklı cizdirebilmek icin olusturulan kurelerin index sayilari return ediliyor.
     return indexCount;
 }
 
+// dosya yoluna ve ismine gore texture dosyalari gerekli texture bufferina yukler.
 GLuint QOpenGLPanel::loadTexture(QString fileName){
 
+    // opengl functionlari tanimlaniyor
     QOpenGLFunctions *f = getGLFunctions();
     f->initializeOpenGLFunctions();
     QOpenGLExtraFunctions *ef = getGLExtraFunctions();
     ef->initializeOpenGLFunctions();
 
+    // hedef dosya resim haline getiriliyor
     Texture = QImage(fileName);
 
+    // belirtilen dosya hedefte yoksa donduruyor.
     if (Texture.isNull()) {
         qDebug() << "Failed to load texture from" << fileName;
         return -1;
@@ -210,6 +218,7 @@ GLuint QOpenGLPanel::loadTexture(QString fileName){
 
     GLuint textureData;
 
+    // texture buffer hazırlanıyor ve texture buffera ekleniyor.
     f->glGenTextures(1, &textureData);
     f->glBindTexture(GL_TEXTURE_2D, textureData);
 
@@ -218,11 +227,14 @@ GLuint QOpenGLPanel::loadTexture(QString fileName){
     f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    // nesnenin pikselleri 24 bit bir rgb formatina donduruluyor.
     QImage im = Texture.convertToFormat(QImage::Format_RGB888);
 
+    // 2d texture olusturur ve gpu ya yukler.
     f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Texture.width(), Texture.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, im.bits());
     f->glGenerateMipmap(GL_TEXTURE_2D);
 
+    // texture bufferi return ediliyor.
     return textureData;
 }
 
@@ -246,6 +258,7 @@ void QOpenGLPanel::initializeGL()
     cameraMatrixID = f->glGetUniformLocation(progID, "cameraMatrix");
     projectionMatrixID = f->glGetUniformLocation(progID, "projectionMatrix");
 
+    // bufferlar aktiflestiriliyor.
     ef->glGenVertexArrays(2, &sphereVAO[0]);
 
     f->glGenBuffers(2, &vbo[0]);
@@ -261,13 +274,15 @@ void QOpenGLPanel::initializeGL()
 
     GLuint stride = (3 + 2 + 3) * sizeof(float);
 
+    // ana kure olusturuluyor. (Tum gezegenler bu kureyi kullanıyor.)
     sunSize = createSphere(64, 64, 0.0f, 0.0f, 0.0f);
 
-
+    // tüm vertex bilgileri (vertex, texture ve normal) buffera ekleniyor.
     ef->glBindVertexArray(sphereVAO[0]);
     f->glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     f->glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(float), &vert[0], GL_STATIC_DRAW);
 
+    // indices ler buffera yukleniyor
     f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[0]);
     f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
@@ -318,7 +333,7 @@ void QOpenGLPanel::initializeGL()
     QString neptuneTexFileName = ":/img/2k_neptune.jpg";
     neptuneTexture = loadTexture(neptuneTexFileName);
 
-
+    // ay icin kure olusturuluyor (bu ekstra olusturulan kure, birden fazla farklı kureyi kullanabilmenin yolunu gostermektedir.)
     moonSize = createSphere(64, 64, 0.0f, 0.0f, 0.0f);
 
     ef->glBindVertexArray(sphereVAO[1]);
@@ -341,6 +356,7 @@ void QOpenGLPanel::initializeGL()
     sunRotateMatrix.setToIdentity();
     sunScaleMatrix.setToIdentity();
 
+    // Güneşin buyukluk çarpanı
     sunScaleMultp = 0.0f;
 
     // Dünya için yörünge ve kendi ekseni etrafında dönüş matrislerini başlat
@@ -476,9 +492,10 @@ void QOpenGLPanel::paintGL()
         sunScaleMatrix.scale(sunScaleMultp, sunScaleMultp, sunScaleMultp);
 
         sunSelfRotateAngle += 0.5f;
-        sunRotateMatrix.setToIdentity();
+        sunRotateMatrix.setToIdentity(); // matrixi tanımlar
         sunRotateMatrix.rotate(sunSelfRotateAngle, 0.0f, 1.0f, 0.0f); // Yörüngede Y ekseninde döndür
 
+        // gunesin hem kendi etrafında donmesini, hem de arayuzdeki donme ile donmesini saglar
         QMatrix4x4 sunModelMatrix = sunRotateMatrix * rotateMatrix;
         f->glUniformMatrix4fv(rotateMatrixID, 1, GL_FALSE, sunModelMatrix.constData());
 
